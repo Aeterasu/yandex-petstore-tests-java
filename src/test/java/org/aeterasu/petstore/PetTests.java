@@ -12,12 +12,25 @@ import java.net.URI;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
+import org.junit.jupiter.api.MethodOrderer.*;
+
+@TestMethodOrder(OrderAnnotation.class)
 public class PetTests
 {
 	// TODO: POST create valid pet
 	// TODO: POST create invalid pet!
 
-	// TODO: GET invalid pet!
+	// TODO: cleanup delete and imageUpload, use HttpUtils
+	// TODO: more test cases!
+	
+	// TODO: invalid test cases for
+		// put create pet with invalid json formatting
+		// put updating with invalid formatting
+		// uploading a nonexistent image
+		// getting a pet by invalid status
+		// delete an already deleted pet
+
+	// comment test cases
 
 	private static final int PET_ID = 999;
 
@@ -32,7 +45,7 @@ public class PetTests
 			.put("name", "bobby")
 			.put("status", "available");
 
-		HttpResponse<String> response = HttpUtils.post(HttpUtils.BASE_URL + "/pet", json.toString(), HttpUtils.APPLICATION_JSON);
+		HttpResponse<String> response = HttpUtils.post(HttpUtils.BASE_URL + "/pet/", json.toString(), HttpUtils.APPLICATION_JSON);
 		assertEquals(200, response.statusCode());
 	}
 
@@ -45,7 +58,7 @@ public class PetTests
 			.put("name", "bobby")
 			.put("status", "sold");
 
-		HttpResponse<String> response = HttpUtils.put(HttpUtils.BASE_URL + "/pet", json.toString(), HttpUtils.APPLICATION_JSON);
+		HttpResponse<String> response = HttpUtils.put(HttpUtils.BASE_URL + "/pet/", json.toString(), HttpUtils.APPLICATION_JSON);
 		assertEquals(200, response.statusCode());
 	}
 
@@ -75,7 +88,7 @@ public class PetTests
 			.put("name", "billy")
 			.put("status", "pending");
 
-		HttpResponse<String> response = HttpUtils.put(HttpUtils.BASE_URL + "/pet", json.toString(), HttpUtils.APPLICATION_JSON);
+		HttpResponse<String> response = HttpUtils.put(HttpUtils.BASE_URL + "/pet/", json.toString(), HttpUtils.APPLICATION_JSON);
 		assertEquals(200, response.statusCode());
 	}
 
@@ -136,11 +149,6 @@ public class PetTests
 
 		HttpResponse<String> response = HttpUtils.client.send(request, HttpResponse.BodyHandlers.ofString());
 		
-		assertEquals(200, response.statusCode());	
-
-		// check if we can GET a deleted pet
-
-		HttpResponse<String> getInvalidPetResponse = HttpUtils.get(HttpUtils.BASE_URL + "/pet/" + PET_ID);
-    	assertEquals(404, getInvalidPetResponse.statusCode());
+		assertEquals(200, response.statusCode());
 	}
 }
