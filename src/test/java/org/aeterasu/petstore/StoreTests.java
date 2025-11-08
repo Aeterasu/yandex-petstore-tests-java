@@ -13,19 +13,16 @@ import java.net.http.HttpResponse;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-import org.junit.jupiter.api.MethodOrderer.*;
-
-@TestMethodOrder(OrderAnnotation.class)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class StoreTests
 {
     private static final int PET_ID = 999;
-    private static final int ORDER_ID = 999;
 
     // TODO: move consts like api key into its own container
     private static final String API_KEY = "special-key";
 
     @Test
-    @Order(1)
+    @Order(11)
     public void testGetInventory() throws Exception
     {
 		HttpResponse<String> response = HttpUtils.get(HttpUtils.BASE_URL + "/store/inventory/");
@@ -33,7 +30,7 @@ public class StoreTests
     }
 
 	@Test
-	@Order(2)
+	@Order(12)
 	public void testPostOrder() throws Exception
 	{
         LocalDateTime currentDateTime = LocalDateTime.now();
@@ -41,7 +38,7 @@ public class StoreTests
         String formattedDateTime = currentDateTime.format(formatter);
 
 		JSONObject json = new JSONObject()
-            .put("id", ORDER_ID)
+            .put("id", 1)
 			.put("petId", PET_ID)
 			.put("quantity", 99)
 			.put("shipDate", formattedDateTime)
@@ -53,19 +50,19 @@ public class StoreTests
 	}
 
 	@Test
-	@Order(3)
-	public void testGetPetById() throws Exception
+	@Order(13)
+	public void testGetOrderById() throws Exception
 	{
-		HttpResponse<String> response = HttpUtils.get(HttpUtils.BASE_URL + "/store/order/" + Integer.toString(ORDER_ID));
+		HttpResponse<String> response = HttpUtils.get(HttpUtils.BASE_URL + "/store/order/5");
 		assertEquals(200, response.statusCode());
 	}
 
 	@Test
-	@Order(4)
-	public void testDeletePet() throws Exception
+	@Order(14)
+	public void testDeleteOrder() throws Exception
 	{
 		HttpRequest request = HttpRequest.newBuilder()
-				.uri(URI.create(HttpUtils.BASE_URL + "/store/order/" + ORDER_ID))
+				.uri(URI.create(HttpUtils.BASE_URL + "/store/order/1"))
 				.header("api_key", API_KEY)
 				.DELETE()
 				.build();

@@ -1,0 +1,18 @@
+- TODO: fix test failing compared to clean test
+
+- TODO: POST create valid pet
+- TODO: POST create invalid pet!
+
+- TODO: cleanup delete and imageUpload, use HttpUtils
+- TODO: more test cases!
+	
+- TODO: invalid test cases for
+- put create pet with invalid json formatting
+- put updating with invalid formatting
+- uploading a nonexistent image
+- getting a pet by invalid status
+- delete an already deleted pet
+
+- TODO: move models into classes
+
+- comment test cases

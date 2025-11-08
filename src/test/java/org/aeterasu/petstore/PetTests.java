@@ -12,26 +12,9 @@ import java.net.URI;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
-import org.junit.jupiter.api.MethodOrderer.*;
-
-@TestMethodOrder(OrderAnnotation.class)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class PetTests
 {
-	// TODO: POST create valid pet
-	// TODO: POST create invalid pet!
-
-	// TODO: cleanup delete and imageUpload, use HttpUtils
-	// TODO: more test cases!
-	
-	// TODO: invalid test cases for
-		// put create pet with invalid json formatting
-		// put updating with invalid formatting
-		// uploading a nonexistent image
-		// getting a pet by invalid status
-		// delete an already deleted pet
-
-	// comment test cases
-
 	private static final int PET_ID = 999;
 
 	private static final String API_KEY = "special-key";
