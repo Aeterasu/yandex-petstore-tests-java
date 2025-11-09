@@ -12,6 +12,14 @@ TODONE
 + test cases:
 
     PET:
+        + POST /pet/{petId}
+
+        + GET /pet/findByStatus
+            + 200
+            + 400
+
+        + GET /pet/{petId}
+
         + POST /pet/{petId}/uploadImage
             + 200
         
@@ -19,13 +27,44 @@ TODONE
             + 200
             + 405
 
+        + PUT /pet
+            + 200
+            + 404
+            + 405
+
     STORE:
         + GET /store/inventory
+            + 200
+
+        + DELETE /store/order/{orderId}
+            + 200
+
+        + POST /store/order
+            + 200
+
+        + GET /store/order/{orderId}
             + 200
 
     USER:
         + GET /user/{username}
         + Get /user/logout
+
+        + POST /user/createWithList
+            + 200
+            + invalid JSON
+
+        + POST /user/createWithArray
+            + 200
+            + invalid JSON
+
+        + PUT /user/{username}
+            + 200
+
+        + DELETE /user/{username}
+            + 200
+
+        + GET /user/login
+            + 200
 
 TODO:
 
@@ -33,68 +72,7 @@ TODO:
 
 - add readme, with startup instructions
 
-    PET:
-        - PUT /pet
-            + 200
-            - 400
-            - 404
-            - 405
-
-        - GET /pet/findByStatus
-            + 200
-            - 400
-
-        - GET /pet/{petId}
-            + 200
-            - 400
-            - 404
-
-        - POST /pet/{petId}
-            + 200
-            - 405
-
-        - DELETE /pet/{petId}
-            + 200
-            - 400
-            - 404
-
-    STORE:
-        - POST /store/order
-            + 200
-            - 400
-
-        - GET /store/order/{orderId}
-            + 200
-            - 400
-            - 404
-
-        - DELETE /store/order/{orderId}
-            + 200
-            - 400
-            - 404
-
     USER:
-        - POST /user/createWithList
-            + 200
-            - invalid JSON
-
-        - POST /user/createWithArray
-            + 200
-            - invalid JSON
-
-        - PUT /user/{username}
-            + 200
-            - 400
-            - 404
-
-        - DELETE /user/{username}
-            + 200
-            - 400
-            - 404
-
-        - GET /user/login
-            + 200
-            - 400
 
         - POST /user
             + 200

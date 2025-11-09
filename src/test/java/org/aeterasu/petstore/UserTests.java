@@ -194,4 +194,20 @@ public class UserTests
 			.postJson(Api.BASE_URL + "/user/createWithList/", arr.toString());
 		assertEquals(200, respList.statusCode());
 	}
+
+	@Test
+	public void testCreateUsersWithInvalidArray() throws Exception
+	{
+		// no, I have no idea why there's two identical methods with different names!
+
+		// createWithArray
+		HttpResponse<String> respArray = HttpUtils
+			.postJson(Api.BASE_URL + "/user/createWithArray/", "");
+		assertEquals(405, respArray.statusCode());
+
+		// createWithList
+		HttpResponse<String> respList = HttpUtils
+			.postJson(Api.BASE_URL + "/user/createWithList/", "");
+		assertEquals(405, respList.statusCode());
+	}
 }
