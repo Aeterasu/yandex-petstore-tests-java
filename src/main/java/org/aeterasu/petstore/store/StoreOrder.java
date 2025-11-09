@@ -1,11 +1,11 @@
-package org.aeterasu.petstore.order;
+package org.aeterasu.petstore.store;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 import org.json.JSONObject;
 
-public class PetOrder
+public class StoreOrder
 {
 	private long id = 0;
 	private long petId = 0;
@@ -14,7 +14,7 @@ public class PetOrder
 	private String status = "";
 	private Boolean complete = false;
 
-	public PetOrder(
+	public StoreOrder(
 		long id, 
 		long petId,
 		long quantity,

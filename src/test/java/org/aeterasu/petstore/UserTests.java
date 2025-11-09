@@ -1,4 +1,5 @@
 package org.aeterasu.petstore;
+import org.aeterasu.petstore.user.User;
 
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -6,8 +7,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.json.*;
 
 import java.net.http.HttpResponse;
-
-import org.aeterasu.petstore.user.User;
 
 public class UserTests
 {

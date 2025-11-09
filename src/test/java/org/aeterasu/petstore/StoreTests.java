@@ -1,5 +1,5 @@
 package org.aeterasu.petstore;
-import org.aeterasu.petstore.order.PetOrder;
+import org.aeterasu.petstore.store.StoreOrder;
 
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -20,11 +20,11 @@ public class StoreTests
 	{
 		long r = (long)(Math.random() * 10) + 1;
 
-		PetOrder order = new PetOrder(
+		StoreOrder order = new StoreOrder(
 			r,
 			TestingUtils.getRandomId(),
 			99,
-			PetOrder.getCurrentDataFormatted(),
+			StoreOrder.getCurrentDataFormatted(),
 			"placed",
 			true
 		);
@@ -44,7 +44,7 @@ public class StoreTests
 	@SuppressWarnings("unused")
 	class ExistingOrderTests
 	{
-		private PetOrder testOrder = null;
+		private StoreOrder testOrder = null;
 		private long orderId = 0;
 
 		@BeforeEach
@@ -53,11 +53,11 @@ public class StoreTests
 			long r = (long)(Math.random() * 10) + 1;
 
 			orderId = r;
-			testOrder = new PetOrder(
+			testOrder = new StoreOrder(
 				r,
 				TestingUtils.getRandomId(),
 				99,
-				PetOrder.getCurrentDataFormatted(),
+				StoreOrder.getCurrentDataFormatted(),
 				"placed",
 				true
 			);
