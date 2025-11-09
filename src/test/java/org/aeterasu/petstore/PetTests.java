@@ -3,134 +3,176 @@ package org.aeterasu.petstore;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import static org.awaitility.Awaitility.await;
+import java.time.Duration;
+
 import org.junit.jupiter.params.*;
 import org.junit.jupiter.params.provider.*;
-
-import org.json.*;
 
 import java.net.URI;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 public class PetTests
 {
-	private static long testPetId = 0;
+	// Tests for creating pets
+    @Nested
+    class CreatePetTests
+    {
+		// Creating a new pet using a valid JSON
+        @Test
+        public void testPostCreatePet() throws Exception
+        {
+            long id = TestingUtils.getRandomId();
+            Pet pet = new Pet(id, "Bobby", PetStatus.getStatusAvailable());
+            HttpResponse<String> response = HttpUtils.postJson(Api.BASE_URL + "/pet/", pet.getJson().toString());
+            assertEquals(200, response.statusCode());
+        }
 
-	@BeforeAll
-	public static void initId()
-	{
-		testPetId = TestingUtils.getRandomId();
-	}
+		// Creating a new pet using an invalid JSON
+        @Test
+        public void testPostCreateInvalidPet() throws Exception
+        {
+            HttpResponse<String> response = HttpUtils.postJson(Api.BASE_URL + "/pet/", "");
+            assertEquals(405, response.statusCode());
+        }
 
-	@Test
-	@Order(1)
-	public void testPostCreatePet() throws Exception
-	{
+		@Test
+        public void testPutUpdateInvalidPet() throws Exception
+        {
+            HttpResponse<String> response = HttpUtils.putJson(Api.BASE_URL + "/pet/", "");
+            assertEquals(405, response.statusCode());
+        }
+    }
 	
-		JSONObject json = new JSONObject()
-			.put("id", testPetId)
-			.put("name", "bobby")
-			.put("status", "available");
+    @Nested
+    class ExistingPetTests
+    {
+        private Pet testPet = null;
+        private long petId = 0;
 
-		HttpResponse<String> response = HttpUtils.postJson(ApiInfo.BASE_URL + "/pet/", json.toString());
-		assertEquals(200, response.statusCode());
-	}
+        @BeforeEach
+        public void setupPet() throws Exception
+        {
+            petId = TestingUtils.getRandomId();
+            testPet = new Pet(petId, "Bobby" + petId, PetStatus.getStatusAvailable());
 
-	@Test
-	@Order(2)
-	public void testPutUpdatePet() throws Exception
-	{
-		JSONObject json = new JSONObject()
-			.put("id", testPetId)
-			.put("name", "bobby")
-			.put("status", "sold");
+            HttpResponse<String> postResponse = HttpUtils.postJson(Api.BASE_URL + "/pet/", testPet.getJson().toString());
+            assertEquals(200, postResponse.statusCode());
 
-		HttpResponse<String> response = HttpUtils.putJson(ApiInfo.BASE_URL + "/pet/", json.toString());
-		assertEquals(200, response.statusCode());
-	}
+			// poll the api to make sure out pet is actually created
+			// this accounts for API latency
+			// i had the issue that if I, say, create and instantly get then the tests shit itself
+			// hopefully this will fix this - tests will fail only if the API is completely dead :
+			// which seems appropriate!
 
-	@Test
-	@Order(3)
-	public void testGetPetById() throws Exception
-	{
-		HttpResponse<String> response = HttpUtils.get(ApiInfo.BASE_URL + "/pet/" + Long.toString(testPetId));
-		assertEquals(200, response.statusCode());
-	}
+			// we will do a lot of the same later!
+            await()
+                .atMost(Duration.ofSeconds(Api.MAX_WAIT_TIME))
+                .pollInterval(Duration.ofMillis(Api.POLL_INTERVAL))
+                .untilAsserted(() -> 
+					{
+						HttpResponse<String> getResponse = HttpUtils.get(Api.BASE_URL + "/pet/" + petId);
+						assertEquals(200, getResponse.statusCode());
+					}
+				);
+        }
 
-	@ParameterizedTest
-	@ValueSource(strings = {"available", "pending", "sold"})
-	@Order(4)
-	public void testGetPetByStatus(String status) throws Exception
-	{
-		HttpResponse<String> response = HttpUtils.get(ApiInfo.BASE_URL + "/pet/findByStatus?status=" + status);
-		assertEquals(200, response.statusCode());
-	}
+		// Retrieve pets by status
+        @ParameterizedTest
+        @ValueSource(strings = { PetStatus.AVAILABLE, PetStatus.PENDING, PetStatus.SOLD })
+        public void testGetPetByStatus(String status) throws Exception
+        {
+            String url = Api.BASE_URL + "/pet/findByStatus?status=" + status;
+            HttpResponse<String> response = HttpUtils.get(url);
+            assertEquals(200, response.statusCode());
+        }
 
-	@Test
-	@Order(5)
-	public void testPutUpdateFormPet() throws Exception
-	{
-		JSONObject json = new JSONObject()
-			.put("id", testPetId)
-			.put("name", "billy")
-			.put("status", "pending");
+		// Get pet by ID
+        @Test
+        public void testGetPetById() throws Exception
+        {
+            await()
+                .atMost(Duration.ofSeconds(Api.MAX_WAIT_TIME))
+                .pollInterval(Duration.ofMillis(Api.POLL_INTERVAL))
+                .untilAsserted(() -> 
+					{
+						HttpResponse<String> response = HttpUtils.get(Api.BASE_URL + "/pet/" + Long.toString(petId));
+						assertEquals(200, response.statusCode());
+					}
+				);
+        }
 
-		HttpResponse<String> response = HttpUtils.putJson(ApiInfo.BASE_URL + "/pet/", json.toString());
-		assertEquals(200, response.statusCode());
-	}
+		// PUT update a pet!
+        @Test
+        public void testPutUpdatePet() throws Exception
+        {
+            Pet updatedPet = new Pet(petId, "Billy", PetStatus.getStatuSold());
+			HttpResponse<String> response = HttpUtils.putJson(Api.BASE_URL + "/pet/", updatedPet.getJson().toString());
+			assertEquals(200, response.statusCode());
+        }
 
-	// TODO: cleanup
-	// form-data expect very rigid formatting, not sure how to work around this!
-	@Test
-	@Order(6)
-	public void testPostUploadImage() throws Exception
-	{
-		java.nio.file.Path imagePath = java.nio.file.Paths.get("src/test/resources/fumo.jpg");
+        @Test
+        public void testPostUploadImage() throws Exception
+        {
+            Path imagePath = Paths.get("src/test/resources/fumo.jpg");
+            String boundary = "Boundary-" + System.currentTimeMillis();
+            
+            byte[] body = buildMultipartBody(boundary, "cool pet image", imagePath);
 
-		String boundary = "Boundary-" + System.currentTimeMillis();
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(Api.BASE_URL + "/pet/" + Long.toString(petId) + "/uploadImage"))
+                .header("Content-Type", "multipart/form-data; boundary=" + boundary)
+                .POST(HttpRequest.BodyPublishers.ofByteArray(body))
+                .build();
 
-		String metadataPart = "--" + boundary + "\r\n" +
-				"Content-Disposition: form-data; name=\"additionalMetadata\"\r\n\r\n" +
-				"My pet image\r\n";
+            HttpResponse<String> response = HttpUtils.getClient().send(request, HttpResponse.BodyHandlers.ofString());
 
-		String fileHeader = "--" + boundary + "\r\n" +
-				"Content-Disposition: form-data; name=\"file\"; filename=\"" + imagePath.getFileName() + "\"\r\n" +
-				"Content-Type: image/jpeg\r\n\r\n";
+            assertEquals(200, response.statusCode());
+        }
 
-		String closingBoundary = "\r\n--" + boundary + "--\r\n";
+        @Test
+        public void testDeletePet() throws Exception
+        {
+            await()
+                .atMost(Duration.ofSeconds(Api.MAX_WAIT_TIME))
+                .pollInterval(Duration.ofMillis(Api.POLL_INTERVAL))
+                .untilAsserted(() -> 
+                {
+                    HttpResponse<String> response = HttpUtils.delete(Api.BASE_URL + "/pet/" + Long.toString(petId), "api_key", Api.API_KEY);
+                    assertEquals(200, response.statusCode());
+                });
+        }
+    }
 
-		byte[] metaBytes = metadataPart.getBytes();
-		byte[] headerBytes = fileHeader.getBytes();
-		byte[] closingBytes = closingBoundary.getBytes();
+	// form-multipart-whatever expect very rigid formatting, not sure how to work around this!
+    private byte[] buildMultipartBody(String boundary, String metadata, Path imagePath) throws Exception
+    {
+        String metadataPart = "--" + boundary + "\r\n" +
+                "Content-Disposition: form-data; name=\"additionalMetadata\"\r\n\r\n" +
+                metadata + "\r\n";
 
-		byte[] fileBytes = java.nio.file.Files.readAllBytes(imagePath);
+        String fileHeader = "--" + boundary + "\r\n" +
+                "Content-Disposition: form-data; name=\"file\"; filename=\"" + imagePath.getFileName() + "\"\r\n" +
+                "Content-Type: " + Files.probeContentType(imagePath) + "\r\n\r\n";
 
-		byte[] body = new byte[metaBytes.length + headerBytes.length + fileBytes.length + closingBytes.length];
-		System.arraycopy(metaBytes, 0, body, 0, metaBytes.length);
-		System.arraycopy(headerBytes, 0, body, metaBytes.length, headerBytes.length);
-		System.arraycopy(fileBytes, 0, body, metaBytes.length + headerBytes.length, fileBytes.length);
-		System.arraycopy(closingBytes, 0, body, metaBytes.length + headerBytes.length + fileBytes.length, closingBytes.length);
+        String closingBoundary = "\r\n--" + boundary + "--\r\n";
 
-		HttpRequest request = HttpRequest.newBuilder()
-			.uri(URI.create(ApiInfo.BASE_URL  + "/pet/" + Long.toString(testPetId) + "/uploadImage"))
-			.header("Content-Type", "multipart/form-data; boundary=" + boundary)
-			.POST(HttpRequest.BodyPublishers.ofByteArray(body))
-			.build();
+        byte[] metaBytes = metadataPart.getBytes();
+        byte[] headerBytes = fileHeader.getBytes();
+        byte[] closingBytes = closingBoundary.getBytes();
+        byte[] fileBytes = Files.readAllBytes(imagePath);
 
-		HttpResponse<String> response = HttpUtils.getClient().send(request, HttpResponse.BodyHandlers.ofString());
+        byte[] body = new byte[metaBytes.length + headerBytes.length + fileBytes.length + closingBytes.length];
+        System.arraycopy(metaBytes, 0, body, 0, metaBytes.length);
+        System.arraycopy(headerBytes, 0, body, metaBytes.length, headerBytes.length);
+        System.arraycopy(fileBytes, 0, body, metaBytes.length + headerBytes.length, fileBytes.length);
+        System.arraycopy(closingBytes, 0, body, metaBytes.length + headerBytes.length + fileBytes.length, closingBytes.length);
 
-		assertEquals(200, response.statusCode());
-	}
-
-	// TODO: cleanup and use HttpUtils
-
-	@Test
-	@Order(7)
-	public void testDeletePet() throws Exception
-	{
-		HttpResponse<String> response = HttpUtils.delete(ApiInfo.BASE_URL + "/pet/" + Long.toString(testPetId), "api_key", ApiInfo.API_KEY);
-		
-		assertEquals(200, response.statusCode());
-	}
+        return body;
+    }
 }

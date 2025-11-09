@@ -50,7 +50,7 @@ public class UserTests
 			.put("phone", "1234567890")
 			.put("userStatus", 0);
 
-		HttpResponse<String> response = HttpUtils.postJson(ApiInfo.BASE_URL + "/user/", json.toString());
+		HttpResponse<String> response = HttpUtils.postJson(Api.BASE_URL + "/user/", json.toString());
 		assertEquals(200, response.statusCode());
 	}
 
@@ -58,7 +58,7 @@ public class UserTests
 	@Order(22)
 	public void testLogin() throws Exception
 	{
-		HttpResponse<String> response = UserUtils.login(USERNAME, PASSWORD);
+		HttpResponse<String> response = User.login(USERNAME, PASSWORD);
 		assertEquals(200, response.statusCode());
 	}
 
@@ -77,7 +77,7 @@ public class UserTests
 			.put("userStatus", 0);
 
 		HttpResponse<String> response = HttpUtils
-			.putJson(ApiInfo.BASE_URL + "/user/" + USERNAME, json.toString());
+			.putJson(Api.BASE_URL + "/user/" + USERNAME, json.toString());
 		assertEquals(200, response.statusCode());
 	}
 
@@ -89,7 +89,7 @@ public class UserTests
 
 		while (attempts < maxRetries) 
 		{
-			response = HttpUtils.get(ApiInfo.BASE_URL + "/user/user1");
+			response = HttpUtils.get(Api.BASE_URL + "/user/user1");
 
 			if (response.statusCode() == 200) 
 			{
@@ -118,7 +118,7 @@ public class UserTests
 	@Order(25)
 	public void testLogout() throws Exception
 	{
-		HttpResponse<String> response = UserUtils.logout();
+		HttpResponse<String> response = User.logout();
 		assertEquals(200, response.statusCode());
 	}
 
@@ -126,11 +126,11 @@ public class UserTests
 	@Order(26)
 	public void testDeleteUser() throws Exception
 	{
-		HttpResponse<String> loginResponse = UserUtils.login(USERNAME, PASSWORD);
+		HttpResponse<String> loginResponse = User.login(USERNAME, PASSWORD);
 		assertEquals(200, loginResponse.statusCode());
 
 		HttpResponse<String> response = HttpUtils
-			.delete(ApiInfo.BASE_URL + "/user/" + USERNAME);
+			.delete(Api.BASE_URL + "/user/" + USERNAME);
 		
 		assertEquals(200, response.statusCode());
 	}
@@ -154,13 +154,13 @@ public class UserTests
 
 		// createWithArray
 		HttpResponse<String> respArray = HttpUtils
-			.postJson(ApiInfo.BASE_URL + "/user/createWithArray/", arr.toString());
+			.postJson(Api.BASE_URL + "/user/createWithArray/", arr.toString());
 
 		assertEquals(200, respArray.statusCode());
 
 		// createWithList
 		HttpResponse<String> respList = HttpUtils
-			.postJson(ApiInfo.BASE_URL + "/user/createWithList/", arr.toString());
+			.postJson(Api.BASE_URL + "/user/createWithList/", arr.toString());
 
 		assertEquals(200, respList.statusCode());
 	}

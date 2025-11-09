@@ -17,7 +17,7 @@ public class StoreTests
     @Order(11)
     public void testGetInventory() throws Exception
     {
-		HttpResponse<String> response = HttpUtils.get(ApiInfo.BASE_URL + "/store/inventory/");
+		HttpResponse<String> response = HttpUtils.get(Api.BASE_URL + "/store/inventory/");
 		assertEquals(200, response.statusCode());        
     }
 
@@ -37,7 +37,7 @@ public class StoreTests
             .put("status", "placed")
             .put("complete", true);
 
-		HttpResponse<String> response = HttpUtils.postJson(ApiInfo.BASE_URL + "/store/order/", json.toString());
+		HttpResponse<String> response = HttpUtils.postJson(Api.BASE_URL + "/store/order/", json.toString());
 		assertEquals(200, response.statusCode());
 	}
 
@@ -45,7 +45,7 @@ public class StoreTests
 	@Order(13)
 	public void testGetOrderById() throws Exception
 	{
-		HttpResponse<String> response = HttpUtils.get(ApiInfo.BASE_URL + "/store/order/5");
+		HttpResponse<String> response = HttpUtils.get(Api.BASE_URL + "/store/order/5");
 		assertEquals(200, response.statusCode());
 	}
 
@@ -53,7 +53,7 @@ public class StoreTests
 	@Order(14)
 	public void testDeleteOrder() throws Exception
 	{
-		HttpResponse<String> response = HttpUtils.delete(ApiInfo.BASE_URL + "/store/order/1", "api_key", ApiInfo.API_KEY);
+		HttpResponse<String> response = HttpUtils.delete(Api.BASE_URL + "/store/order/1", "api_key", Api.API_KEY);
 		
 		assertEquals(200, response.statusCode());
 	}

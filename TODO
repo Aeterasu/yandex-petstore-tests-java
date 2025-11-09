@@ -4,24 +4,99 @@ TODONE
 + store tests
 + user tests
 + move consts like api key into its own container
-+ TODO: cleanup delete and imageUpload
++ cleanup delete and imageUpload
++ POST create invalid pet!
++ put create pet with invalid json formatting
+
++ test cases:
+
+    PET:
+        + POST /pet/{petId}/uploadImage
+            + 200
+        
+        + POST /pet
+            + 200
+            + 405
+
+    STORE:
+        + GET /store/inventory
+            + 200
+
+    USER:
+        + GET /user/{username}
+        + Get /user/logout
 
 TODO:
-
-- TODO: POST create valid pet
-- TODO: POST create invalid pet!
-
-- TODO: more test cases!
-	
-- TODO: invalid test cases for
-- put create pet with invalid json formatting
-- put updating with invalid formatting
-- uploading a nonexistent image
-- getting a pet by invalid status
-- delete an already deleted pet
 
 - TODO: move models into classes
 
 - comment test cases
 
 - add readme, with startup instructions
+
+    PET:
+        - PUT /pet
+            + 200
+            - 400
+            - 404
+            - 405
+
+        - GET /pet/findByStatus
+            + 200
+            - 400
+
+        - GET /pet/{petId}
+            + 200
+            - 400
+            - 404
+
+        - POST /pet/{petId}
+            + 200
+            - 405
+
+        - DELETE /pet/{petId}
+            + 200
+            - 400
+            - 404
+
+    STORE:
+        - POST /store/order
+            + 200
+            - 400
+
+        - GET /store/order/{orderId}
+            + 200
+            - 400
+            - 404
+
+        - DELETE /store/order/{orderId}
+            + 200
+            - 400
+            - 404
+
+    USER:
+        - POST /user/createWithList
+            + 200
+            - invalid JSON
+
+        - POST /user/createWithArray
+            + 200
+            - invalid JSON
+
+        - PUT /user/{username}
+            + 200
+            - 400
+            - 404
+
+        - DELETE /user/{username}
+            + 200
+            - 400
+            - 404
+
+        - GET /user/login
+            + 200
+            - 400
+
+        - POST /user
+            + 200
+            - invalid JSON
