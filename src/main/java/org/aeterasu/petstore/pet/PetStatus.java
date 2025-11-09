@@ -1,4 +1,4 @@
-package org.aeterasu.petstore;
+package org.aeterasu.petstore.pet;
 
 public class PetStatus
 {

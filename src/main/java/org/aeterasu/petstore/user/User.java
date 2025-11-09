@@ -1,6 +1,9 @@
-package org.aeterasu.petstore;
+package org.aeterasu.petstore.user;
 
 import java.net.http.*;
+
+import org.aeterasu.petstore.Api;
+import org.aeterasu.petstore.HttpUtils;
 
 public class User
 {

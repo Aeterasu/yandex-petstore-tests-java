@@ -1,9 +1,12 @@
 package org.aeterasu.petstore;
+import org.aeterasu.petstore.pet.Pet;
+import org.aeterasu.petstore.pet.PetStatus;
 
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import static org.awaitility.Awaitility.await;
+
 import java.time.Duration;
 
 import org.junit.jupiter.params.*;
@@ -21,6 +24,7 @@ public class PetTests
 {
 	// Tests for creating pets
     @Nested
+    @SuppressWarnings("unused")
     class CreatePetTests
     {
 		// Creating a new pet using a valid JSON
@@ -50,6 +54,7 @@ public class PetTests
     }
 	
     @Nested
+	@SuppressWarnings("unused")
     class ExistingPetTests
     {
         private Pet testPet = null;

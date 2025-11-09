@@ -1,20 +1,17 @@
 package org.aeterasu.petstore;
+import org.aeterasu.petstore.order.PetOrder;
 
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.json.*;
-
 import java.net.http.HttpResponse;
+import java.time.Duration;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import static org.awaitility.Awaitility.await;
 
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class StoreTests
 {
     @Test
-    @Order(11)
     public void testGetInventory() throws Exception
     {
 		HttpResponse<String> response = HttpUtils.get(Api.BASE_URL + "/store/inventory/");
@@ -22,39 +19,82 @@ public class StoreTests
     }
 
 	@Test
-	@Order(12)
 	public void testPostOrder() throws Exception
 	{
-        LocalDateTime currentDateTime = LocalDateTime.now();
-        DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
-        String formattedDateTime = currentDateTime.format(formatter);
+		long r = (long)(Math.random() * 10) + 1;
 
-		JSONObject json = new JSONObject()
-            .put("id", 1)
-			.put("petId", TestingUtils.getRandomId())
-			.put("quantity", 99)
-			.put("shipDate", formattedDateTime)
-            .put("status", "placed")
-            .put("complete", true);
+		PetOrder order = new PetOrder(
+			r,
+			TestingUtils.getRandomId(),
+			99,
+			PetOrder.getCurrentDataFormatted(),
+			"placed",
+			true
+		);
 
-		HttpResponse<String> response = HttpUtils.postJson(Api.BASE_URL + "/store/order/", json.toString());
+		HttpResponse<String> response = HttpUtils.postJson(Api.BASE_URL + "/store/order/", order.getJson().toString());
 		assertEquals(200, response.statusCode());
 	}
 
 	@Test
-	@Order(13)
-	public void testGetOrderById() throws Exception
+	public void testPostInvalidOrder() throws Exception
 	{
-		HttpResponse<String> response = HttpUtils.get(Api.BASE_URL + "/store/order/5");
-		assertEquals(200, response.statusCode());
+		HttpResponse<String> response = HttpUtils.postJson(Api.BASE_URL + "/store/order/", "");
+		assertEquals(400, response.statusCode());
 	}
 
-	@Test
-	@Order(14)
-	public void testDeleteOrder() throws Exception
+	@Nested
+    @SuppressWarnings("unused")
+	class ExistingOrder
 	{
-		HttpResponse<String> response = HttpUtils.delete(Api.BASE_URL + "/store/order/1", "api_key", Api.API_KEY);
-		
-		assertEquals(200, response.statusCode());
+        private PetOrder testOrder = null;
+        private long orderId = 0;
+
+        @BeforeEach
+        public void setupOrder() throws Exception
+        {
+			long r = (long)(Math.random() * 10) + 1;
+
+            orderId = r;
+			testOrder = new PetOrder(
+				r,
+				TestingUtils.getRandomId(),
+				99,
+				PetOrder.getCurrentDataFormatted(),
+				"placed",
+				true
+			);
+
+            HttpResponse<String> postResponse = HttpUtils.postJson(Api.BASE_URL + "/store/order", testOrder.getJson().toString());
+            assertEquals(200, postResponse.statusCode());
+        }
+
+		@Test
+		public void testGetOrderById() throws Exception
+		{
+            await()
+                .atMost(Duration.ofSeconds(Api.MAX_WAIT_TIME))
+                .pollInterval(Duration.ofMillis(Api.POLL_INTERVAL))
+                .untilAsserted(() -> 
+					{
+						HttpResponse<String> getResponse = HttpUtils.get(Api.BASE_URL + "/store/order/" + Long.toString(orderId));
+						assertEquals(200, getResponse.statusCode());
+					}
+				);
+		}
+
+		@Test
+		public void testDeleteOrder() throws Exception
+		{
+            await()
+                .atMost(Duration.ofSeconds(Api.MAX_WAIT_TIME))
+                .pollInterval(Duration.ofMillis(Api.POLL_INTERVAL))
+                .untilAsserted(() -> 
+                {
+					HttpResponse<String> response = HttpUtils.delete(Api.BASE_URL + "/store/order/" + Long.toString(orderId));
+					assertEquals(200, response.statusCode());
+                });
+		}
+
 	}
 }

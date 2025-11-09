@@ -8,6 +8,8 @@ import org.json.*;
 import java.net.http.HttpResponse;
 import java.util.UUID;
 
+import org.aeterasu.petstore.user.User;
+
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class UserTests
 {
