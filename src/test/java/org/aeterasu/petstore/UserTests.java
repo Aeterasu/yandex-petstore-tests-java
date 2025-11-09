@@ -3,12 +3,9 @@ package org.aeterasu.petstore;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import static org.awaitility.Awaitility.await;
-
 import org.json.*;
 
 import java.net.http.HttpResponse;
-import java.time.Duration;
 
 import org.aeterasu.petstore.user.User;
 
@@ -64,22 +61,11 @@ public class UserTests
 			HttpResponse<String> response = HttpUtils.postJson(Api.BASE_URL + "/user/", testUser.getJson().toString());
 			assertEquals(200, response.statusCode());
 
-			// poll the api to make sure out pet is actually created
-			// this accounts for API latency
-			// i had the issue that if I, say, create and instantly get then the tests shit itself
-			// hopefully this will fix this - tests will fail only if the API is completely dead :
-			// which seems appropriate!
-
-			// we will do a lot of the same later!
-            await()
-                .atMost(Duration.ofSeconds(Api.MAX_WAIT_TIME))
-                .pollInterval(Duration.ofMillis(Api.POLL_INTERVAL))
-                .untilAsserted(() -> 
-					{
-						HttpResponse<String> getResponse = HttpUtils.get(Api.BASE_URL + "/user/" + testUser.getUsername());
-						assertEquals(200, getResponse.statusCode());
-					}
-				);
+			TestingUtils.pollAwait(() ->
+			{
+				HttpResponse<String> getResponse = HttpUtils.get(Api.BASE_URL + "/user/" + testUser.getUsername());
+				assertEquals(200, getResponse.statusCode());
+			});
         }
 
 		@Test
@@ -113,15 +99,11 @@ public class UserTests
 		@Test
 		void testGetUser() throws Exception 
 		{
-            await()
-                .atMost(Duration.ofSeconds(Api.MAX_WAIT_TIME))
-                .pollInterval(Duration.ofMillis(Api.POLL_INTERVAL))
-                .untilAsserted(() -> 
-					{
-						HttpResponse<String> response = HttpUtils.get(Api.BASE_URL + "/user/" + testUser.getUsername());
-						assertEquals(200, response.statusCode());
-					}
-				);
+			TestingUtils.pollAwait(() ->
+			{
+				HttpResponse<String> response = HttpUtils.get(Api.BASE_URL + "/user/" + testUser.getUsername());
+				assertEquals(200, response.statusCode());
+			});
 		}
 
 		@Test
@@ -139,17 +121,13 @@ public class UserTests
 			HttpResponse<String> loginResponse = User.login(testUser.getUsername(), testUser.getPassword());
 			assertEquals(200, loginResponse.statusCode());
 
-            await()
-                .atMost(Duration.ofSeconds(Api.MAX_WAIT_TIME))
-                .pollInterval(Duration.ofMillis(Api.POLL_INTERVAL))
-                .untilAsserted(() -> 
-					{
-						HttpResponse<String> response = HttpUtils
-							.delete(Api.BASE_URL + "/user/" + testUser.getUsername());
+			TestingUtils.pollAwait(() ->
+			{
+				HttpResponse<String> response = HttpUtils
+					.delete(Api.BASE_URL + "/user/" + testUser.getUsername());
 
-						assertEquals(200, response.statusCode());
-					}
-				);
+				assertEquals(200, response.statusCode());
+			});
 		}
 	}
 

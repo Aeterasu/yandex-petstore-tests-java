@@ -5,10 +5,6 @@ import org.aeterasu.petstore.pet.PetStatus;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import static org.awaitility.Awaitility.await;
-
-import java.time.Duration;
-
 import org.junit.jupiter.params.*;
 import org.junit.jupiter.params.provider.*;
 
@@ -91,15 +87,11 @@ public class PetTests
 		@Test
 		public void testGetPetById() throws Exception
 		{
-			await()
-				.atMost(Duration.ofSeconds(Api.MAX_WAIT_TIME))
-				.pollInterval(Duration.ofMillis(Api.POLL_INTERVAL))
-				.untilAsserted(() -> 
-					{
-						HttpResponse<String> response = HttpUtils.get(Api.BASE_URL + "/pet/" + Long.toString(petId));
-						assertEquals(200, response.statusCode());
-					}
-				);
+			TestingUtils.pollAwait(() ->
+			{
+				HttpResponse<String> response = HttpUtils.get(Api.BASE_URL + "/pet/" + Long.toString(petId));
+				assertEquals(200, response.statusCode());				
+			});
 		}
 
 		@Test
@@ -114,26 +106,19 @@ public class PetTests
 			// which seems appropriate!
 
 			// we will do a lot of the same later!
-			await()
-				.atMost(Duration.ofSeconds(Api.MAX_WAIT_TIME))
-				.pollInterval(Duration.ofMillis(Api.POLL_INTERVAL))
-				.untilAsserted(() -> 
-				{
-					HttpResponse<String> deleteResponse = HttpUtils.delete(
-						Api.BASE_URL + "/pet/" + Long.toString(petId), "api_key", Api.API_KEY);
-				});
+			TestingUtils.pollAwait(() ->
+			{
+				HttpResponse<String> deleteResponse = HttpUtils.delete(
+				Api.BASE_URL + "/pet/" + Long.toString(petId), "api_key", Api.API_KEY);			
+			});
 
 			// try to get deleted pet
 
-			await()
-				.atMost(Duration.ofSeconds(Api.MAX_WAIT_TIME))
-				.pollInterval(Duration.ofMillis(Api.POLL_INTERVAL))
-				.untilAsserted(() -> 
-					{
-						HttpResponse<String> response = HttpUtils.get(Api.BASE_URL + "/pet/" + Long.toString(petId));
-						assertEquals(404, response.statusCode());
-					}
-				);
+			TestingUtils.pollAwait(() ->
+			{
+				HttpResponse<String> response = HttpUtils.get(Api.BASE_URL + "/pet/" + Long.toString(petId));
+				assertEquals(404, response.statusCode());		
+			});
 		}
 
 		// PUT update a pet!
@@ -168,14 +153,11 @@ public class PetTests
 		@Test
 		public void testDeletePet() throws Exception
 		{
-			await()
-				.atMost(Duration.ofSeconds(Api.MAX_WAIT_TIME))
-				.pollInterval(Duration.ofMillis(Api.POLL_INTERVAL))
-				.untilAsserted(() -> 
-				{
-					HttpResponse<String> response = HttpUtils.delete(Api.BASE_URL + "/pet/" + Long.toString(petId), "api_key", Api.API_KEY);
-					assertEquals(200, response.statusCode());
-				});
+			TestingUtils.pollAwait(() ->
+			{
+				HttpResponse<String> response = HttpUtils.delete(Api.BASE_URL + "/pet/" + Long.toString(petId), "api_key", Api.API_KEY);
+				assertEquals(200, response.statusCode());	
+			});
 		}
 	}
 

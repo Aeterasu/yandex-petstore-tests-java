@@ -5,9 +5,6 @@ import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.net.http.HttpResponse;
-import java.time.Duration;
-
-import static org.awaitility.Awaitility.await;
 
 public class StoreTests
 {
@@ -72,29 +69,37 @@ public class StoreTests
 		@Test
 		public void testGetOrderById() throws Exception
 		{
-			await()
-				.atMost(Duration.ofSeconds(Api.MAX_WAIT_TIME))
-				.pollInterval(Duration.ofMillis(Api.POLL_INTERVAL))
-				.untilAsserted(() -> 
-					{
-						HttpResponse<String> getResponse = HttpUtils.get(Api.BASE_URL + "/store/order/" + Long.toString(orderId));
-						assertEquals(200, getResponse.statusCode());
-					}
-				);
+			TestingUtils.pollAwait(() ->
+			{
+					HttpResponse<String> getResponse = HttpUtils.get(Api.BASE_URL + "/store/order/" + Long.toString(orderId));
+					assertEquals(200, getResponse.statusCode());
+			});
 		}
 
 		@Test
 		public void testDeleteOrder() throws Exception
 		{
-			await()
-				.atMost(Duration.ofSeconds(Api.MAX_WAIT_TIME))
-				.pollInterval(Duration.ofMillis(Api.POLL_INTERVAL))
-				.untilAsserted(() -> 
-				{
-					HttpResponse<String> response = HttpUtils.delete(Api.BASE_URL + "/store/order/" + Long.toString(orderId));
-					assertEquals(200, response.statusCode());
-				});
+			TestingUtils.pollAwait(() ->
+			{
+				HttpResponse<String> response = HttpUtils.delete(Api.BASE_URL + "/store/order/" + Long.toString(orderId));
+				assertEquals(200, response.statusCode());
+			});
 		}
 
+		@Test
+		public void testGetDeletedOrderById() throws Exception
+		{
+			TestingUtils.pollAwait(() ->
+			{
+				HttpResponse<String> response = HttpUtils.delete(Api.BASE_URL + "/store/order/" + Long.toString(orderId));
+				assertEquals(200, response.statusCode());
+			});
+
+			TestingUtils.pollAwait(() ->
+			{
+				HttpResponse<String> getResponse = HttpUtils.get(Api.BASE_URL + "/store/order/" + Long.toString(orderId));
+				assertEquals(404, getResponse.statusCode());
+			});
+		}
 	}
 }

@@ -66,14 +66,12 @@ TODONE
         + GET /user/login
             + 200
 
+        + POST /user
+            + 200
+            + invalid JSON
+
 TODO:
 
 - comment test cases
 
 - add readme, with startup instructions
-
-    USER:
-
-        - POST /user
-            + 200
-            - invalid JSON
