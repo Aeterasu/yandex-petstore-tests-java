@@ -7,6 +7,7 @@ TODONE
 + cleanup delete and imageUpload
 + POST create invalid pet!
 + put create pet with invalid json formatting
++ TODO: move models into classes
 
 + test cases:
 
@@ -27,8 +28,6 @@ TODONE
         + Get /user/logout
 
 TODO:
-
-- TODO: move models into classes
 
 - comment test cases
 

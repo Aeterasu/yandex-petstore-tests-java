@@ -11,12 +11,12 @@ import static org.awaitility.Awaitility.await;
 
 public class StoreTests
 {
-    @Test
-    public void testGetInventory() throws Exception
-    {
+	@Test
+	public void testGetInventory() throws Exception
+	{
 		HttpResponse<String> response = HttpUtils.get(Api.BASE_URL + "/store/inventory/");
 		assertEquals(200, response.statusCode());        
-    }
+	}
 
 	@Test
 	public void testPostOrder() throws Exception
@@ -44,18 +44,18 @@ public class StoreTests
 	}
 
 	@Nested
-    @SuppressWarnings("unused")
-	class ExistingOrder
+	@SuppressWarnings("unused")
+	class ExistingOrderTests
 	{
-        private PetOrder testOrder = null;
-        private long orderId = 0;
+		private PetOrder testOrder = null;
+		private long orderId = 0;
 
-        @BeforeEach
-        public void setupOrder() throws Exception
-        {
+		@BeforeEach
+		public void setupOrder() throws Exception
+		{
 			long r = (long)(Math.random() * 10) + 1;
 
-            orderId = r;
+			orderId = r;
 			testOrder = new PetOrder(
 				r,
 				TestingUtils.getRandomId(),
@@ -65,17 +65,17 @@ public class StoreTests
 				true
 			);
 
-            HttpResponse<String> postResponse = HttpUtils.postJson(Api.BASE_URL + "/store/order", testOrder.getJson().toString());
-            assertEquals(200, postResponse.statusCode());
-        }
+			HttpResponse<String> postResponse = HttpUtils.postJson(Api.BASE_URL + "/store/order", testOrder.getJson().toString());
+			assertEquals(200, postResponse.statusCode());
+		}
 
 		@Test
 		public void testGetOrderById() throws Exception
 		{
-            await()
-                .atMost(Duration.ofSeconds(Api.MAX_WAIT_TIME))
-                .pollInterval(Duration.ofMillis(Api.POLL_INTERVAL))
-                .untilAsserted(() -> 
+			await()
+				.atMost(Duration.ofSeconds(Api.MAX_WAIT_TIME))
+				.pollInterval(Duration.ofMillis(Api.POLL_INTERVAL))
+				.untilAsserted(() -> 
 					{
 						HttpResponse<String> getResponse = HttpUtils.get(Api.BASE_URL + "/store/order/" + Long.toString(orderId));
 						assertEquals(200, getResponse.statusCode());
@@ -86,14 +86,14 @@ public class StoreTests
 		@Test
 		public void testDeleteOrder() throws Exception
 		{
-            await()
-                .atMost(Duration.ofSeconds(Api.MAX_WAIT_TIME))
-                .pollInterval(Duration.ofMillis(Api.POLL_INTERVAL))
-                .untilAsserted(() -> 
-                {
+			await()
+				.atMost(Duration.ofSeconds(Api.MAX_WAIT_TIME))
+				.pollInterval(Duration.ofMillis(Api.POLL_INTERVAL))
+				.untilAsserted(() -> 
+				{
 					HttpResponse<String> response = HttpUtils.delete(Api.BASE_URL + "/store/order/" + Long.toString(orderId));
 					assertEquals(200, response.statusCode());
-                });
+				});
 		}
 
 	}

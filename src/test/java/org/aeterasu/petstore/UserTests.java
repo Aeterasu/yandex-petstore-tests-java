@@ -3,167 +3,195 @@ package org.aeterasu.petstore;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import static org.awaitility.Awaitility.await;
+
 import org.json.*;
 
 import java.net.http.HttpResponse;
-import java.util.UUID;
+import java.time.Duration;
 
 import org.aeterasu.petstore.user.User;
 
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class UserTests
 {
-	private static long testUserId = 0;
-
-	private static final String USERNAME = "Kartoshka";
-	private static final String PASSWORD = "1234567890";
-
-	@BeforeAll
-	public static void initId()
-	{
-		testUserId = TestingUtils.getRandomId();
-	}
-
-	private JSONObject makeUser(String username, String password) 
-	{
-		long id = TestingUtils.getRandomId();
-		return new JSONObject()
-				.put("id", id)
-				.put("username", username)
-				.put("firstName", "Fn")
-				.put("lastName", "Ln")
-				.put("email", username + "@example.com")
-				.put("password", password)
-				.put("phone", "1234567890")
-				.put("userStatus", 0);
-	}
-
 	@Test
-	@Order(21)
 	public void testPostCreateUser() throws Exception
 	{
-		JSONObject json = new JSONObject()
-			.put("id", testUserId)
-			.put("username", USERNAME)
-			.put("firstName", "Ivan")
-			.put("lastName", "Invanovich")
-			.put("email", "kartoshka@kartoshka.com")
-			.put("password", PASSWORD)
-			.put("phone", "1234567890")
-			.put("userStatus", 0);
+		User user = new User(
+			TestingUtils.getRandomId(), 
+			"Kartoshka",
+			"Ivan",
+			"Ivanovich",
+			"ivan@example.com",
+			"1234567890",
+			"+1234567890",
+			0
+			);
 
-		HttpResponse<String> response = HttpUtils.postJson(Api.BASE_URL + "/user/", json.toString());
+		HttpResponse<String> response = HttpUtils.postJson(Api.BASE_URL + "/user/", user.getJson().toString());
 		assertEquals(200, response.statusCode());
 	}
 
 	@Test
-	@Order(22)
-	public void testLogin() throws Exception
+	public void testPostCreateInvalidUser() throws Exception
 	{
-		HttpResponse<String> response = User.login(USERNAME, PASSWORD);
-		assertEquals(200, response.statusCode());
+		HttpResponse<String> response = HttpUtils.postJson(Api.BASE_URL + "/user/", "");
+		assertEquals(405, response.statusCode());
 	}
 
-	@Test
-	@Order(23)
-	public void testPutUpdateUser() throws Exception
+    @Nested
+	@SuppressWarnings("unused")
+    class ExistingUserTest
 	{
-		JSONObject json = new JSONObject()
-			.put("id", testUserId)
-			.put("username", USERNAME)
-			.put("firstName", "Andrey")
-			.put("lastName", "Andreevich")
-			.put("email", "kartoshka@kartoshka.com")
-			.put("password", "1234567890")
-			.put("phone", "1234567890")
-			.put("userStatus", 0);
+        private User testUser = null;
 
-		HttpResponse<String> response = HttpUtils
-			.putJson(Api.BASE_URL + "/user/" + USERNAME, json.toString());
-		assertEquals(200, response.statusCode());
-	}
+        @BeforeEach
+        public void setupUser() throws Exception
+        {
+			long id = TestingUtils.getRandomId();
 
-	// endpoint returns either 200 or 404 at random - too bad!
-	// we bash our head against getting user until something happens
-	public static HttpResponse<String> getUserWithRetry(int maxRetries, int delayMs) throws Exception {
-		int attempts = 0;
-		HttpResponse<String> response = null;
+			testUser = new User(
+				TestingUtils.getRandomId(), 
+				"Kartoshka" + Long.toString(id),
+				"Ivan",
+				"Ivanovich",
+				"ivan@example.com",
+				"1234567890",
+				"+1234567890",
+				0
+				);
 
-		while (attempts < maxRetries) 
+			HttpResponse<String> response = HttpUtils.postJson(Api.BASE_URL + "/user/", testUser.getJson().toString());
+			assertEquals(200, response.statusCode());
+
+			// poll the api to make sure out pet is actually created
+			// this accounts for API latency
+			// i had the issue that if I, say, create and instantly get then the tests shit itself
+			// hopefully this will fix this - tests will fail only if the API is completely dead :
+			// which seems appropriate!
+
+			// we will do a lot of the same later!
+            await()
+                .atMost(Duration.ofSeconds(Api.MAX_WAIT_TIME))
+                .pollInterval(Duration.ofMillis(Api.POLL_INTERVAL))
+                .untilAsserted(() -> 
+					{
+						HttpResponse<String> getResponse = HttpUtils.get(Api.BASE_URL + "/user/" + testUser.getUsername());
+						assertEquals(200, getResponse.statusCode());
+					}
+				);
+        }
+
+		@Test
+		public void testPutUpdateUser() throws Exception
 		{
-			response = HttpUtils.get(Api.BASE_URL + "/user/user1");
+			User.login(testUser.getUsername(), testUser.getPassword());
 
-			if (response.statusCode() == 200) 
-			{
-				return response;
-			}
+			User newUser = new User(
+				TestingUtils.getRandomId(), 
+				"Kapusta",
+				"Andrey",
+				"Andreevich",
+				"ivan@example.com",
+				"1234567890",
+				"+1234567890",
+				0
+				);
 
-			attempts++;
-
-			Thread.sleep(delayMs);
+			HttpResponse<String> response = HttpUtils
+				.putJson(Api.BASE_URL + "/user/" + testUser.getUsername(), newUser.getJson().toString());
+			assertEquals(200, response.statusCode());
 		}
 
-		// either 200 or 404 - a wild world of endless possibilities!
-		return response;
+		@Test
+		public void testLogin() throws Exception
+		{
+			HttpResponse<String> response = User.login(testUser.getUsername(), testUser.getPassword());
+			assertEquals(200, response.statusCode());
+		}
+
+		@Test
+		void testGetUser() throws Exception 
+		{
+            await()
+                .atMost(Duration.ofSeconds(Api.MAX_WAIT_TIME))
+                .pollInterval(Duration.ofMillis(Api.POLL_INTERVAL))
+                .untilAsserted(() -> 
+					{
+						HttpResponse<String> response = HttpUtils.get(Api.BASE_URL + "/user/" + testUser.getUsername());
+						assertEquals(200, response.statusCode());
+					}
+				);
+		}
+
+		@Test
+		public void testLogout() throws Exception
+		{
+			HttpResponse<String> response = User.logout();
+			assertEquals(200, response.statusCode());
+		}
+
+		@Test
+		public void testDeleteUser() throws Exception
+		{
+			User.login(testUser.getUsername(), testUser.getPassword());
+
+			HttpResponse<String> loginResponse = User.login(testUser.getUsername(), testUser.getPassword());
+			assertEquals(200, loginResponse.statusCode());
+
+            await()
+                .atMost(Duration.ofSeconds(Api.MAX_WAIT_TIME))
+                .pollInterval(Duration.ofMillis(Api.POLL_INTERVAL))
+                .untilAsserted(() -> 
+					{
+						HttpResponse<String> response = HttpUtils
+							.delete(Api.BASE_URL + "/user/" + testUser.getUsername());
+
+						assertEquals(200, response.statusCode());
+					}
+				);
+		}
 	}
 
 	@Test
-	@Order(24)
-	void testGetUser() throws Exception 
-	{
-		HttpResponse<String> response = getUserWithRetry(5, 500); // 5 retries, 0.5s apart
-
-		assertEquals(200, response.statusCode());
-	}
-
-	@Test
-	@Order(25)
-	public void testLogout() throws Exception
-	{
-		HttpResponse<String> response = User.logout();
-		assertEquals(200, response.statusCode());
-	}
-
-	@Test
-	@Order(26)
-	public void testDeleteUser() throws Exception
-	{
-		HttpResponse<String> loginResponse = User.login(USERNAME, PASSWORD);
-		assertEquals(200, loginResponse.statusCode());
-
-		HttpResponse<String> response = HttpUtils
-			.delete(Api.BASE_URL + "/user/" + USERNAME);
-		
-		assertEquals(200, response.statusCode());
-	}
-
-	@Test
-	@Order(27)
 	public void testCreateUsersWithArray() throws Exception
 	{
-		String nameA = "userA_" + UUID.randomUUID().toString().substring(0, 6);
-		String nameB = "userB_" + UUID.randomUUID().toString().substring(0, 6);
-		String password = "password";
+		User userA = new User(
+			TestingUtils.getRandomId(),
+			"UserA",
+			"John",
+			"California",
+			"john@example.com",
+			"1234567890",
+			"+1234567890",
+			0			
+		);
 
-		JSONObject userA = makeUser(nameA, password);
-		JSONObject userB = makeUser(nameB, password);
+		User userB = new User(
+			TestingUtils.getRandomId(),
+			"UserB",
+			"Ivan",
+			"Rusich",
+			"ivan@example.ru",
+			"1234567890",
+			"+1234567890",
+			0			
+		);
 
 		JSONArray arr = new JSONArray();
-		arr.put(userA);
-		arr.put(userB);
+		arr.put(userA.getJson());
+		arr.put(userB.getJson());
 
 		// no, I have no idea why there's two identical methods with different names!
 
 		// createWithArray
 		HttpResponse<String> respArray = HttpUtils
 			.postJson(Api.BASE_URL + "/user/createWithArray/", arr.toString());
-
 		assertEquals(200, respArray.statusCode());
 
 		// createWithList
 		HttpResponse<String> respList = HttpUtils
 			.postJson(Api.BASE_URL + "/user/createWithList/", arr.toString());
-
 		assertEquals(200, respList.statusCode());
 	}
 }
