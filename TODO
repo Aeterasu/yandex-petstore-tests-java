@@ -8,8 +8,6 @@ TODONE
 
 TODO:
 
-- TODO: fix test failing compared to clean test
-
 - TODO: POST create valid pet
 - TODO: POST create invalid pet!
 
