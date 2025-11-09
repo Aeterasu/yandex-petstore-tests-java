@@ -10,6 +10,7 @@ import java.net.http.HttpResponse;
 
 public class UserTests
 {
+	// Create user from JSON, expect everything to go smooth
 	@Test
 	public void testPostCreateUser() throws Exception
 	{
@@ -28,6 +29,7 @@ public class UserTests
 		assertEquals(200, response.statusCode());
 	}
 
+	// Create user with an invalid JSON
 	@Test
 	public void testPostCreateInvalidUser() throws Exception
 	{
@@ -67,6 +69,7 @@ public class UserTests
 			});
         }
 
+		// Update existing user
 		@Test
 		public void testPutUpdateUser() throws Exception
 		{

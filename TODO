@@ -9,6 +9,9 @@ TODONE
 + put create pet with invalid json formatting
 + TODO: move models into classes
 
++ comment test cases
+
+
 + test cases:
 
     PET:
@@ -71,7 +74,5 @@ TODONE
             + invalid JSON
 
 TODO:
-
-- comment test cases
 
 - add readme, with startup instructions

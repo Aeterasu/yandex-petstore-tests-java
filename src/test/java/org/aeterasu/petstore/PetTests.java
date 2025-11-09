@@ -41,6 +41,7 @@ public class PetTests
 			assertEquals(405, response.statusCode());
 		}
 
+		// Update pet with an invalid JSON
 		@Test
 		public void testPutUpdateInvalidPet() throws Exception
 		{
@@ -75,14 +76,7 @@ public class PetTests
 			HttpResponse<String> response = HttpUtils.get(url);
 			assertEquals(200, response.statusCode());
 		}
-
-		public void testGetPetByInvalidStatus() throws Exception
-		{
-			String url = Api.BASE_URL + "/pet/findByStatus?status=";
-			HttpResponse<String> response = HttpUtils.get(url);
-			assertEquals(400, response.statusCode());
-		}
-
+		
 		// Get pet by ID
 		@Test
 		public void testGetPetById() throws Exception
