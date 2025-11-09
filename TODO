@@ -1,9 +1,18 @@
+TODONE
+
++ pet tests
++ store tests
++ user tests
++ move consts like api key into its own container
++ TODO: cleanup delete and imageUpload
+
+TODO:
+
 - TODO: fix test failing compared to clean test
 
 - TODO: POST create valid pet
 - TODO: POST create invalid pet!
 
-- TODO: cleanup delete and imageUpload, use HttpUtils
 - TODO: more test cases!
 	
 - TODO: invalid test cases for
@@ -16,3 +25,5 @@
 - TODO: move models into classes
 
 - comment test cases
+
+- add readme, with startup instructions

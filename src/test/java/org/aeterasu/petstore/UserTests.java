@@ -11,13 +11,20 @@ import java.util.UUID;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class UserTests
 {
-    private static final int USER_ID = 999;
+    private static long testUserId = 0;
+
     private static final String USERNAME = "Kartoshka";
     private static final String PASSWORD = "1234567890";
 
+	@BeforeAll
+	public static void initId()
+	{
+		testUserId = TestingUtils.getRandomId();
+	}
+
     private JSONObject makeUser(String username, String password) 
 	{
-        long id = Math.abs(UUID.randomUUID().getMostSignificantBits());
+        long id = TestingUtils.getRandomId();
         return new JSONObject()
                 .put("id", id)
                 .put("username", username)
@@ -34,7 +41,7 @@ public class UserTests
 	public void testPostCreateUser() throws Exception
 	{
 		JSONObject json = new JSONObject()
-            .put("id", USER_ID)
+            .put("id", testUserId)
 			.put("username", USERNAME)
 			.put("firstName", "Ivan")
 			.put("lastName", "Invanovich")
@@ -43,7 +50,7 @@ public class UserTests
             .put("phone", "1234567890")
             .put("userStatus", 0);
 
-		HttpResponse<String> response = HttpUtils.post(HttpUtils.BASE_URL + "/user/", json.toString(), HttpUtils.APPLICATION_JSON);
+		HttpResponse<String> response = HttpUtils.postJson(ApiInfo.BASE_URL + "/user/", json.toString());
 		assertEquals(200, response.statusCode());
 	}
 
@@ -51,15 +58,7 @@ public class UserTests
 	@Order(22)
 	public void testLogin() throws Exception
 	{
-        String username = "testuser";
-        String password = "12345";
-
-        // Build URL with query parameters
-        String url = String.format(HttpUtils.BASE_URL + "/user/login?username=%s&password=%s",
-                java.net.URLEncoder.encode(username, "UTF-8"),
-                java.net.URLEncoder.encode(password, "UTF-8"));
-
-		HttpResponse<String> response = HttpUtils.get(url);
+		HttpResponse<String> response = UserUtils.login(USERNAME, PASSWORD);
 		assertEquals(200, response.statusCode());
 	}
 
@@ -68,7 +67,7 @@ public class UserTests
 	public void testPutUpdateUser() throws Exception
 	{
 		JSONObject json = new JSONObject()
-            .put("id", USER_ID)
+            .put("id", testUserId)
 			.put("username", USERNAME)
 			.put("firstName", "Andrey")
 			.put("lastName", "Andreevich")
@@ -77,7 +76,8 @@ public class UserTests
             .put("phone", "1234567890")
             .put("userStatus", 0);
 
-		HttpResponse<String> response = HttpUtils.put(HttpUtils.BASE_URL + "/user/" + USERNAME, json.toString(), HttpUtils.APPLICATION_JSON);
+		HttpResponse<String> response = HttpUtils
+			.putJson(ApiInfo.BASE_URL + "/user/" + USERNAME, json.toString());
 		assertEquals(200, response.statusCode());
 	}
 
@@ -85,7 +85,8 @@ public class UserTests
     @Order(24)
     public void testGetUser() throws Exception
     {
-		HttpResponse<String> response = HttpUtils.get(HttpUtils.BASE_URL + "/user/" + USERNAME);
+		HttpResponse<String> response = HttpUtils
+			.get(ApiInfo.BASE_URL + "/user/user1");
 		assertEquals(200, response.statusCode());        
     }
 
@@ -93,16 +94,19 @@ public class UserTests
 	@Order(25)
 	public void testLogout() throws Exception
 	{
-		HttpResponse<String> response = HttpUtils.get(HttpUtils.BASE_URL + "/user/logout");
+		HttpResponse<String> response = UserUtils.logout();
 		assertEquals(200, response.statusCode());
 	}
-
 
 	@Test
 	@Order(26)
 	public void testDeleteUser() throws Exception
 	{
-		HttpResponse<String> response = HttpUtils.delete(HttpUtils.BASE_URL + "/user/" + USERNAME);
+		HttpResponse<String> loginResponse = UserUtils.login(USERNAME, PASSWORD);
+		assertEquals(200, loginResponse.statusCode());
+
+		HttpResponse<String> response = HttpUtils
+			.delete(ApiInfo.BASE_URL + "/user/" + USERNAME);
 		
 		assertEquals(200, response.statusCode());
 	}
@@ -111,24 +115,29 @@ public class UserTests
 	@Order(27)
 	public void testCreateUsersWithArray() throws Exception
 	{
-		String u1 = "userA_" + UUID.randomUUID().toString().substring(0, 6);
-        String u2 = "userB_" + UUID.randomUUID().toString().substring(0, 6);
+		String nameA = "userA_" + UUID.randomUUID().toString().substring(0, 6);
+        String nameB = "userB_" + UUID.randomUUID().toString().substring(0, 6);
+		String password = "password";
 
-        JSONObject user1 = makeUser(u1, "password");
-        JSONObject user2 = makeUser(u2, "password");
+        JSONObject userA = makeUser(nameA, password);
+        JSONObject userB = makeUser(nameB, password);
 
         JSONArray arr = new JSONArray();
-        arr.put(user1);
-        arr.put(user2);
+        arr.put(userA);
+        arr.put(userB);
+
+		// no, I have no idea why there's two identical methods with different names!
 
         // createWithArray
         HttpResponse<String> respArray = HttpUtils
-			.post(HttpUtils.BASE_URL + "/user/createWithArray/", arr.toString(), HttpUtils.APPLICATION_JSON);
+			.postJson(ApiInfo.BASE_URL + "/user/createWithArray/", arr.toString());
+
         assertEquals(200, respArray.statusCode());
 
-        // createWithList (sending same array is fine)
+        // createWithList
         HttpResponse<String> respList = HttpUtils
-			.post(HttpUtils.BASE_URL + "/user/createWithList/", arr.toString(), HttpUtils.APPLICATION_JSON);
+			.postJson(ApiInfo.BASE_URL + "/user/createWithList/", arr.toString());
+
         assertEquals(200, respList.statusCode());
 	}
 }

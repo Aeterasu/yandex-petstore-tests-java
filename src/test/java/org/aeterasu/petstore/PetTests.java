@@ -15,20 +15,25 @@ import java.net.http.HttpResponse;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class PetTests
 {
-	private static final int PET_ID = 999;
+	private static long testPetId = 0;
 
-	private static final String API_KEY = "special-key";
+	@BeforeAll
+	public static void initId()
+	{
+		testPetId = TestingUtils.getRandomId();
+	}
 
 	@Test
 	@Order(1)
 	public void testPostCreatePet() throws Exception
 	{
+	
 		JSONObject json = new JSONObject()
-			.put("id", PET_ID)
+			.put("id", testPetId)
 			.put("name", "bobby")
 			.put("status", "available");
 
-		HttpResponse<String> response = HttpUtils.post(HttpUtils.BASE_URL + "/pet/", json.toString(), HttpUtils.APPLICATION_JSON);
+		HttpResponse<String> response = HttpUtils.postJson(ApiInfo.BASE_URL + "/pet/", json.toString());
 		assertEquals(200, response.statusCode());
 	}
 
@@ -37,11 +42,11 @@ public class PetTests
 	public void testPutUpdatePet() throws Exception
 	{
 		JSONObject json = new JSONObject()
-			.put("id", PET_ID)
+			.put("id", testPetId)
 			.put("name", "bobby")
 			.put("status", "sold");
 
-		HttpResponse<String> response = HttpUtils.put(HttpUtils.BASE_URL + "/pet/", json.toString(), HttpUtils.APPLICATION_JSON);
+		HttpResponse<String> response = HttpUtils.putJson(ApiInfo.BASE_URL + "/pet/", json.toString());
 		assertEquals(200, response.statusCode());
 	}
 
@@ -49,7 +54,7 @@ public class PetTests
 	@Order(3)
 	public void testGetPetById() throws Exception
 	{
-		HttpResponse<String> response = HttpUtils.get(HttpUtils.BASE_URL + "/pet/" + Integer.toString(PET_ID));
+		HttpResponse<String> response = HttpUtils.get(ApiInfo.BASE_URL + "/pet/" + Long.toString(testPetId));
 		assertEquals(200, response.statusCode());
 	}
 
@@ -58,7 +63,7 @@ public class PetTests
 	@Order(4)
 	public void testGetPetByStatus(String status) throws Exception
 	{
-		HttpResponse<String> response = HttpUtils.get(HttpUtils.BASE_URL + "/pet/findByStatus?status=" + status);
+		HttpResponse<String> response = HttpUtils.get(ApiInfo.BASE_URL + "/pet/findByStatus?status=" + status);
 		assertEquals(200, response.statusCode());
 	}
 
@@ -67,16 +72,16 @@ public class PetTests
 	public void testPutUpdateFormPet() throws Exception
 	{
 		JSONObject json = new JSONObject()
-			.put("id", PET_ID)
+			.put("id", testPetId)
 			.put("name", "billy")
 			.put("status", "pending");
 
-		HttpResponse<String> response = HttpUtils.put(HttpUtils.BASE_URL + "/pet/", json.toString(), HttpUtils.APPLICATION_JSON);
+		HttpResponse<String> response = HttpUtils.putJson(ApiInfo.BASE_URL + "/pet/", json.toString());
 		assertEquals(200, response.statusCode());
 	}
 
-	// TODO: cleanup and use HttpUtils
-
+	// TODO: cleanup
+	// form-data expect very rigid formatting, not sure how to work around this!
 	@Test
 	@Order(6)
 	public void testPostUploadImage() throws Exception
@@ -108,12 +113,12 @@ public class PetTests
 		System.arraycopy(closingBytes, 0, body, metaBytes.length + headerBytes.length + fileBytes.length, closingBytes.length);
 
 		HttpRequest request = HttpRequest.newBuilder()
-			.uri(URI.create(HttpUtils.BASE_URL  + "/pet/" + Integer.toString(PET_ID) + "/uploadImage"))
+			.uri(URI.create(ApiInfo.BASE_URL  + "/pet/" + Long.toString(testPetId) + "/uploadImage"))
 			.header("Content-Type", "multipart/form-data; boundary=" + boundary)
 			.POST(HttpRequest.BodyPublishers.ofByteArray(body))
 			.build();
 
-		HttpResponse<String> response = HttpUtils.client.send(request, HttpResponse.BodyHandlers.ofString());
+		HttpResponse<String> response = HttpUtils.getClient().send(request, HttpResponse.BodyHandlers.ofString());
 
 		assertEquals(200, response.statusCode());
 	}
@@ -124,13 +129,7 @@ public class PetTests
 	@Order(7)
 	public void testDeletePet() throws Exception
 	{
-		HttpRequest request = HttpRequest.newBuilder()
-				.uri(URI.create(HttpUtils.BASE_URL + "/pet/" + PET_ID))
-				.header("api_key", API_KEY)
-				.DELETE()
-				.build();
-
-		HttpResponse<String> response = HttpUtils.client.send(request, HttpResponse.BodyHandlers.ofString());
+		HttpResponse<String> response = HttpUtils.delete(ApiInfo.BASE_URL + "/pet/" + Long.toString(testPetId), "api_key", ApiInfo.API_KEY);
 		
 		assertEquals(200, response.statusCode());
 	}

@@ -7,11 +7,12 @@ import java.net.http.HttpResponse;
 
 public class HttpUtils 
 {
-	public static final HttpClient client = HttpClient.newHttpClient();
+	private static final HttpClient client = HttpClient.newHttpClient();
 
-	public static final String BASE_URL = "https://petstore.swagger.io/v2";
-	public static final String CONTENT_TYPE = "Content-Type";
-	public static final String APPLICATION_JSON = "application/json";
+	public static HttpClient getClient()
+	{
+		return client;
+	}
 
 	public static HttpResponse<String> get(String url) throws Exception 
 	{
@@ -23,22 +24,22 @@ public class HttpUtils
 		return client.send(request, HttpResponse.BodyHandlers.ofString());
 	}
 
-	public static HttpResponse<String> post(String url, String jsonBody, String contentType) throws Exception 
+	public static HttpResponse<String> postJson(String url, String jsonBody) throws Exception 
 	{
 		HttpRequest request = HttpRequest.newBuilder()
 			.uri(URI.create(url))
-			.header(CONTENT_TYPE, contentType)
+			.header("Content-Type", "application/json")
 			.POST(HttpRequest.BodyPublishers.ofString(jsonBody))
 			.build();
 
 		return client.send(request, HttpResponse.BodyHandlers.ofString());
 	}
 
-	public static HttpResponse<String> put(String url, String jsonBody, String contentType) throws Exception 
+	public static HttpResponse<String> putJson(String url, String jsonBody) throws Exception 
 	{
 		HttpRequest request = HttpRequest.newBuilder()
 			.uri(URI.create(url))
-			.header(CONTENT_TYPE, APPLICATION_JSON)
+			.header("Content-Type", "application/json")
 			.PUT(HttpRequest.BodyPublishers.ofString(jsonBody))
 			.build();
 
@@ -53,5 +54,16 @@ public class HttpUtils
 			.build();
 			
 		return client.send(request, HttpResponse.BodyHandlers.ofString());
-	}    
+	}
+
+	public static HttpResponse<String> delete(String url, String headerName, String headerValue) throws Exception 
+	{
+		HttpRequest request = HttpRequest.newBuilder()
+			.uri(URI.create(url))
+			.DELETE()
+			.header(headerName, headerValue)
+			.build();
+			
+		return client.send(request, HttpResponse.BodyHandlers.ofString());
+	}
 }
